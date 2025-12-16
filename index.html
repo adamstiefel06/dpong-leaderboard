@@ -68,9 +68,9 @@
     </table>
   </div>
 
-  <script>
+<script>
   const csvURL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuMWzW347ezsxrJp0AaUB7U5yCq8mVUGrHk_MZnEf2I-FJon2JQHesuiOJYxV0ibI9yKZLhc4D6fj0/pub?gid=2072605571&single=true&output=csv";
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuMWzW347ezsxrJp0AaUB7U5yCq8mVUGrHk_MZnEf2I-FJon2JQHesuiOJYxV0ibI9yKZLhc4D6fj0/gviz/tq?tqx=out:csv&gid=2072605571";
 
   fetch(csvURL + "&t=" + Date.now())
     .then(res => {
@@ -87,12 +87,11 @@
         .split("\n")
         .map(r => r.split(","));
 
-      // remove header row: Name, DPR, OVR, etc.
-      const data = rows.slice(1);
+      const data = rows.slice(1); // remove header row
 
       data
-        .filter(r => r[0] && !isNaN(Number(r[1]))) // Column A = Name, Column B = DPR
-        .sort((a, b) => Number(b[1]) - Number(a[1])) // sort by DPR
+        .filter(r => r[0] && !isNaN(Number(r[1]))) // A=Name, B=DPR
+        .sort((a, b) => Number(b[1]) - Number(a[1]))
         .forEach((row, i) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -104,17 +103,18 @@
         });
 
       if (table.innerHTML.trim() === "") {
-        table.innerHTML =
-          `<tr><td colspan="3">No valid leaderboard rows found.</td></tr>`;
+        table.innerHTML = `<tr><td colspan="3">Loaded, but no valid rows found.</td></tr>`;
       }
     })
     .catch(err => {
+      console.error(err);
       document.getElementById("leaderboard").innerHTML =
         `<tr><td colspan="3">Error loading leaderboard: ${err.message}</td></tr>`;
-      console.error(err);
     });
 </script>
 
 
+
 </body>
 </html>
+
