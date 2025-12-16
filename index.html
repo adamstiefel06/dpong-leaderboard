@@ -69,46 +69,66 @@
   </div>
 
 <script>
-const csvURL = "https://script.google.com/macros/s/AKfycbz7rFX0vRhnsN7tjnk0fdIMXwq-jub_Av6A62jmXsXhoMpV0OYx1SFb1fVd4vwwnx0bRw/exec";
-  
-  fetch(csvURL + "&t=" + Date.now())
+  const csvURL =
+    "https://script.google.com/macros/s/AKfycbxFejFhfUe8xmSspdHGD31fsZHjMNgqVVplg1m6eTsNpVOmpHTqoDizIOg9EZUcmmvptg/exec"; // Apps Script /exec link
+
+  fetch(csvURL + "?t=" + Date.now())
     .then(res => {
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.text();
     })
     .then(csv => {
-      const table = document.getElementById("leaderboard");
-      table.innerHTML = "";
+      const tbody = document.getElementById("leaderboard");
+      tbody.innerHTML = "";
 
       const rows = csv
         .replace(/\r/g, "")
         .trim()
         .split("\n")
-        .map(r => r.split(","));
+        .slice(1) // remove header row
+        .map(r => r.split(",").slice(0, 9)); // ONLY columns A–I
 
-      const data = rows.slice(1); // remove header row
+      const players = rows
+        .map(r => ({
+          name: r[0]?.trim(),
+          dpr: Number(r[1]),
+          ovr: r[2],
+          games: r[3],
+          wins: r[4],
+          losses: r[5],
+          diff: r[6],
+          winpct: r[7],
+          margin: r[8]
+        }))
+        .filter(p => p.name && Number.isFinite(p.dpr))
+        .sort((a, b) => b.dpr - a.dpr);
 
-      data
-        .filter(r => r[0] && !isNaN(Number(r[1]))) // A=Name, B=DPR
-        .sort((a, b) => Number(b[1]) - Number(a[1]))
-        .forEach((row, i) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td class="rank">${i + 1}</td>
-            <td>${row[0]}</td>
-            <td>${Number(row[1]).toFixed(1)}</td>
-          `;
-          table.appendChild(tr);
-        });
-
-      if (table.innerHTML.trim() === "") {
-        table.innerHTML = `<tr><td colspan="3">Loaded, but no valid rows found.</td></tr>`;
+      if (players.length === 0) {
+        tbody.innerHTML =
+          `<tr><td colspan="9">No leaderboard data found.</td></tr>`;
+        return;
       }
+
+      players.forEach((p, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="rank">${i + 1}</td>
+          <td>${p.name}</td>
+          <td>${p.dpr.toFixed(1)}</td>
+          <td>${p.ovr}</td>
+          <td>${p.games}</td>
+          <td>${p.wins}</td>
+          <td>${p.losses}</td>
+          <td>${p.winpct}</td>
+          <td>${p.margin}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     })
     .catch(err => {
       console.error(err);
       document.getElementById("leaderboard").innerHTML =
-        `<tr><td colspan="3">Error loading leaderboard: ${err.message}</td></tr>`;
+        `<tr><td colspan="9">Error loading leaderboard: ${err.message}</td></tr>`;
     });
 </script>
 
@@ -116,5 +136,6 @@ const csvURL = "https://script.google.com/macros/s/AKfycbz7rFX0vRhnsN7tjnk0fdIMX
 
 </body>
 </html>
+
 
 
