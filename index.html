@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DPONG Leaderboard</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .container {
+      width: 420px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1c1c1c;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #222;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background: #181818;
+    }
+
+    .rank {
+      width: 40px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🏓 DPONG Leaderboard</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>Player</th>
+          <th>Rating</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const csvURL = https://docs.google.com/spreadsheets/d/e/2PACX-1vQuMWzW347ezsxrJp0AaUB7U5yCq8mVUGrHk_MZnEf2I-FJon2JQHesuiOJYxV0ibI9yKZLhc4D6fj0/pub?gid=2072605571&single=true&output=csv;
+
+    fetch(csvURL)
+      .then(res => res.text())
+      .then(csv => {
+        const rows = csv.trim().split("\n").slice(1);
+        const table = document.getElementById("leaderboard");
+
+        rows
+          .map(r => r.split(","))
+          .sort((a, b) => Number(b[1]) - Number(a[1]))
+          .forEach((row, i) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td class="rank">${i + 1}</td>
+              <td>${row[0]}</td>
+              <td>${Math.round(row[1])}</td>
+            `;
+            table.appendChild(tr);
+          });
+      });
+  </script>
+
+</body>
+</html>
