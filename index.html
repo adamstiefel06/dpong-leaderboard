@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DPONG Leaderboard</title>
 
   <style>
@@ -15,97 +16,111 @@
     }
 
     .container {
-      width: 420px;
+      width: min(1100px, 95vw);
     }
 
     h1 {
       text-align: center;
       margin-bottom: 20px;
+      font-size: 48px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: #1c1c1c;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
+      min-width: 980px;
     }
 
     th, td {
-      padding: 10px;
+      padding: 12px 14px;
       text-align: left;
+      white-space: nowrap;
     }
 
     th {
       background: #222;
-      font-weight: bold;
+      font-weight: 700;
     }
 
-    tr:nth-child(even) {
+    tr:nth-child(even) td {
       background: #181818;
     }
 
     .rank {
-      width: 40px;
+      width: 44px;
       color: #aaa;
+      font-weight: 700;
+    }
+
+    .status {
+      text-align: center;
+      padding: 16px;
+      color: #bbb;
     }
   </style>
 </head>
-<body>
 
+<body>
   <div class="container">
     <h1>🏓 DPONG Leaderboard</h1>
 
-    <table>
-      <thead>
-        <tr>
-          <th class="rank">#</th>
-          <th>Player</th>
-          <th>Rating</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th>Name</th>
+            <th>DPR</th>
+            <th>OVR</th>
+            <th>Games Played</th>
+            <th>Wins</th>
+            <th>Losses</th>
+            <th>+/-</th>
+            <th>Win %</th>
+            <th>Average Margin</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard">
+          <tr><td class="status" colspan="10">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-<script>
-  const csvURL =
-    "https://script.google.com/macros/s/AKfycbxFejFhfUe8xmSspdHGD31fsZHjMNgqVVplg1m6eTsNpVOmpHTqoDizIOg9EZUcmmvptg/exec"; // Apps Script /exec link
+  <script>
+    // ✅ Use the WEB APP URL (ends with /exec)
+    const API = "https://script.google.com/macros/s/AKfycbxFejFhfUe8xmSspdHGD31fsZHjMNgqVVplg1m6eTsNpVOmpHTqoDizIOg9EZUcmmvptg/exec";
 
-  fetch(csvURL + "?t=" + Date.now())
-    .then(res => {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.text();
-    })
-    .then(csv => {
+    // JSONP callback (must match callback name in the URL)
+    window.dpongCallback = function(rows) {
       const tbody = document.getElementById("leaderboard");
       tbody.innerHTML = "";
 
-      const rows = csv
-        .replace(/\r/g, "")
-        .trim()
-        .split("\n")
-        .slice(1) // remove header row
-        .map(r => r.split(",").slice(0, 9)); // ONLY columns A–I
-
-      const players = rows
+      const players = (rows || [])
         .map(r => ({
-          name: r[0]?.trim(),
-          dpr: Number(r[1]),
-          ovr: r[2],
-          games: r[3],
-          wins: r[4],
-          losses: r[5],
-          diff: r[6],
-          winpct: r[7],
-          margin: r[8]
+          name: (r[0] || "").trim(),     // A Name
+          dpr: Number(r[1]),             // B DPR
+          ovr: r[2] ?? "",               // C OVR
+          games: r[3] ?? "",             // D Games Played
+          wins: r[4] ?? "",              // E Wins
+          losses: r[5] ?? "",            // F Losses
+          diff: r[6] ?? "",              // G +/-
+          winpct: r[7] ?? "",            // H Win %
+          margin: r[8] ?? ""             // I Avg Margin
         }))
         .filter(p => p.name && Number.isFinite(p.dpr))
         .sort((a, b) => b.dpr - a.dpr);
 
       if (players.length === 0) {
-        tbody.innerHTML =
-          `<tr><td colspan="9">No leaderboard data found.</td></tr>`;
+        tbody.innerHTML = `<tr><td class="status" colspan="10">No leaderboard data found.</td></tr>`;
         return;
       }
 
@@ -119,24 +134,24 @@
           <td>${p.games}</td>
           <td>${p.wins}</td>
           <td>${p.losses}</td>
+          <td>${p.diff}</td>
           <td>${p.winpct}</td>
           <td>${p.margin}</td>
         `;
         tbody.appendChild(tr);
       });
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById("leaderboard").innerHTML =
-        `<tr><td colspan="9">Error loading leaderboard: ${err.message}</td></tr>`;
-    });
-</script>
+    };
 
-
-
+    // Load JSONP (bypasses CORS)
+    (function loadJSONP() {
+      const s = document.createElement("script");
+      s.src = API + "?callback=dpongCallback&t=" + Date.now(); // cache-bust
+      s.onerror = () => {
+        document.getElementById("leaderboard").innerHTML =
+          `<tr><td class="status" colspan="10">Error: could not load DPONG data (script failed).</td></tr>`;
+      };
+      document.body.appendChild(s);
+    })();
+  </script>
 </body>
 </html>
-
-
-
-
