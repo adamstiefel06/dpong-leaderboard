@@ -69,9 +69,8 @@
   </div>
 
 <script>
-  const csvURL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuMWzW347ezsxrJp0AaUB7U5yCq8mVUGrHk_MZnEf2I-FJon2JQHesuiOJYxV0ibI9yKZLhc4D6fj0/gviz/tq?tqx=out:csv&gid=2072605571";
-
+const csvURL = "https://script.google.com/macros/s/AKfycbz7rFX0vRhnsN7tjnk0fdIMXwq-jub_Av6A62jmXsXhoMpV0OYx1SFb1fVd4vwwnx0bRw/exec";
+  
   fetch(csvURL + "&t=" + Date.now())
     .then(res => {
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -117,4 +116,5 @@
 
 </body>
 </html>
+
 
