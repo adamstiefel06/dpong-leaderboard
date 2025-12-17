@@ -94,33 +94,38 @@
       </table>
     </div>
   </div>
+<script>
+  const csvURL = "leaderboard.csv?t=" + Date.now();
 
-  <script>
-    // ✅ Use the WEB APP URL (ends with /exec)
-    const API = "https://script.google.com/macros/s/AKfycbxFejFhfUe8xmSspdHGD31fsZHjMNgqVVplg1m6eTsNpVOmpHTqoDizIOg9EZUcmmvptg/exec";
-
-    // JSONP callback (must match callback name in the URL)
-    window.dpongCallback = function(rows) {
+  fetch(csvURL)
+    .then(res => {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    })
+    .then(csv => {
       const tbody = document.getElementById("leaderboard");
       tbody.innerHTML = "";
 
-      const players = (rows || [])
+      const rows = csv.replace(/\r/g, "").trim().split("\n").slice(1)
+        .map(r => r.split(",").slice(0, 9));
+
+      const players = rows
         .map(r => ({
-          name: (r[0] || "").trim(),     // A Name
-          dpr: Number(r[1]),             // B DPR
-          ovr: r[2] ?? "",               // C OVR
-          games: r[3] ?? "",             // D Games Played
-          wins: r[4] ?? "",              // E Wins
-          losses: r[5] ?? "",            // F Losses
-          diff: r[6] ?? "",              // G +/-
-          winpct: r[7] ?? "",            // H Win %
-          margin: r[8] ?? ""             // I Avg Margin
+          name: (r[0] || "").trim(),
+          dpr: Number(r[1]),
+          ovr: r[2] ?? "",
+          games: r[3] ?? "",
+          wins: r[4] ?? "",
+          losses: r[5] ?? "",
+          diff: r[6] ?? "",
+          winpct: r[7] ?? "",
+          margin: r[8] ?? ""
         }))
         .filter(p => p.name && Number.isFinite(p.dpr))
         .sort((a, b) => b.dpr - a.dpr);
 
       if (players.length === 0) {
-        tbody.innerHTML = `<tr><td class="status" colspan="10">No leaderboard data found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">No data found.</td></tr>`;
         return;
       }
 
@@ -140,18 +145,14 @@
         `;
         tbody.appendChild(tr);
       });
-    };
+    })
+    .catch(err => {
+      document.getElementById("leaderboard").innerHTML =
+        `<tr><td colspan="10">Error: ${err.message}</td></tr>`;
+      console.error(err);
+    });
+</script>
 
-    // Load JSONP (bypasses CORS)
-    (function loadJSONP() {
-      const s = document.createElement("script");
-      s.src = API + "?callback=dpongCallback&t=" + Date.now(); // cache-bust
-      s.onerror = () => {
-        document.getElementById("leaderboard").innerHTML =
-          `<tr><td class="status" colspan="10">Error: could not load DPONG data (script failed).</td></tr>`;
-      };
-      document.body.appendChild(s);
-    })();
-  </script>
-</body>
+  </body>
 </html>
+
