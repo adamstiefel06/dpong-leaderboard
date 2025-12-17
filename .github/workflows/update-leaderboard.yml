@@ -2,7 +2,7 @@ name: Update leaderboard CSV
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
+    - cron: "*/1 * * * *"   # every 10 minutes
   workflow_dispatch:          # lets you run it manually too
 
 permissions:
